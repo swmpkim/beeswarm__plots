@@ -1,0 +1,276 @@
+---
+title: "2012 beeswarm plots"
+author: "Kim Cressman"
+date: "`r Sys.Date()`"
+output: 
+    html_document:
+        keep_md: true
+        code_folding: 'hide'
+        toc: yes
+        toc_float: true
+        toc_depth: 4
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
+Open up some libraries:
+
+```{r}
+library(SWMPr)  # for easy import and QC of SWMP data
+library(tidyverse)  # for lots of data manipulation functions
+library(ggbeeswarm)  # for cool plotting
+library(knitr)  # for pretty tables
+```
+
+
+# Bring in the data  
+
+
+```{r}
+# look for data here
+datapath <- "C:/Users/kimberly.cressman/Desktop/Main Docs/Data-latest"
+
+# import data
+dat_bl <- import_local(datapath, "gndblwq2012") %>%
+    qaqc(qaqc_keep = c(0, 1, 5)) %>%
+    select(-level, -clevel, -chlfluor)
+
+dat_bh <- import_local(datapath, "gndbhwq2012") %>%
+    qaqc(qaqc_keep = c(0, 1, 5)) %>%
+    select(-level, -clevel, -chlfluor)
+
+dat_bc <- import_local(datapath, "gndbcwq2012") %>%
+    qaqc(qaqc_keep = c(0, 1, 5)) %>%
+    select(-level, -clevel, -chlfluor)
+
+dat_pc <- import_local(datapath, "gndpcwq2012") %>%
+    qaqc(qaqc_keep = c(0, 1, 5)) %>%
+    select(-level, -clevel, -chlfluor)
+```
+
+<br>
+
+Next, I want to get all of the salinities into a single data frame, with the site name as the column name, so I can easily put them all on a plot and color by site. Surely there's a better way, but here's what I've gotten to work.
+
+
+
+# Functions to extract a single parameter
+
+## Wide Format: param_extract_wide
+
+```{r}
+#' Wide Parameter Extraction from multiple data frames
+#' 
+#' This function pulls one specified parameter out of all the water quality data frames, and glues them together into one wide data frame.
+#'
+#' @param BC data frame with Bayou Cumbest data. if unspecified, defaults to dat_bc.
+#' @param BH data frame with Bayou Heron data
+#' @param BL data frame with Bangs Lake data
+#' @param PC data frame with Point aux Chenes data
+#' @param param put in quotes - param you want to extract. examples: "sal" / "do_mgl"
+#'
+#' @return returns one wide data frame, with column names being site abbreviations (BC, BH, BL, PC) and values being the parameter of interest
+#' @export
+#'
+
+param_extract_wide <- function(param, BC = dat_bc, BH = dat_bh, BL = dat_bl, PC = dat_pc) {
+    bc <- BC %>%
+        select(datetimestamp, !!param) %>%
+        rename(BC = !!param)
+    bh <- BH %>%
+        select(datetimestamp, !!param) %>%
+        rename(BH = !!param)
+    bl <- BL %>%
+        select(datetimestamp, !!param) %>%
+        rename(BL = !!param)
+    pc <- PC %>%
+        select(datetimestamp, !!param) %>%
+        rename(PC = !!param)
+   
+    # glue them all together 
+    all <- bc %>%
+        left_join(bh) %>%
+        left_join(bl) %>%
+        left_join(pc)
+    
+    return(all)
+        
+}
+```
+
+
+## Long format: param_extract_long
+
+```{r}
+#' Long Parameter Extraction from multiple data frames
+#' 
+#' This function pulls one specified parameter out of all the water quality data frames, and glues them together into one long data frame.
+#'
+#' @param BC data frame with Bayou Cumbest data. if unspecified, defaults to dat_bc.
+#' @param BH data frame with Bayou Heron data
+#' @param BL data frame with Bangs Lake data
+#' @param PC data frame with Point aux Chenes data
+#' @param param put in quotes - param you want to extract. examples: "sal" / "do_mgl"
+#'
+#' @return returns one long data frame, with a column specifying site and a column specifying the value at that site
+#' @export
+#'
+
+param_extract_long <- function(param, BC = dat_bc, BH = dat_bh, BL = dat_bl, PC = dat_pc) {
+    bc <- BC %>%
+        select(datetimestamp, !!param) %>%
+        rename(BC = !!param)
+    bh <- BH %>%
+        select(datetimestamp, !!param) %>%
+        rename(BH = !!param)
+    bl <- BL %>%
+        select(datetimestamp, !!param) %>%
+        rename(BL = !!param)
+    pc <- PC %>%
+        select(datetimestamp, !!param) %>%
+        rename(PC = !!param)
+   
+    # glue them all together and gather into a long format 
+    all <- bc %>%
+        left_join(bh) %>%
+        left_join(bl) %>%
+        left_join(pc) %>%
+        gather(key = "site", value = "value", -datetimestamp) %>%
+        mutate(site = factor(site),
+               site = fct_relevel(site, "BH", "BC", "BL", "PC"))
+    
+    return(all)
+        
+}
+```
+
+
+# Extract parameters
+
+<br>
+
+__Temperature__
+
+
+```{r}
+temp_long <- param_extract_long("temp")
+head(temp_long)
+tail(temp_long)
+```
+
+<br>
+
+__Salinity__
+
+```{r}
+sal_long <- param_extract_long("sal")
+head(sal_long)
+tail(sal_long)
+```
+
+<br>
+
+__Dissolved Oxygen mg/L__
+
+```{r}
+domgl_long <- param_extract_long("do_mgl")
+head(domgl_long)
+tail(domgl_long)
+```
+
+<br>
+
+__Dissolved Oxygen % saturation__
+
+```{r}
+dopct_long <- param_extract_long("do_pct")
+head(dopct_long)
+tail(dopct_long)
+```
+
+<br>
+
+__pH__
+
+```{r}
+ph_long <- param_extract_long("ph")
+head(ph_long)
+tail(ph_long)
+```
+
+<br>
+
+__Depth__  
+
+(not corrected for barometric pressure)
+
+```{r}
+depth_long <- param_extract_long("depth")
+head(depth_long)
+tail(depth_long)
+```
+
+
+
+<br>
+
+# Make plots
+
+```{r}
+beeswarm_wq <- function(dat, title = "", xlab = "Site", ylab = "value") {
+    p <- ggplot(dat) +
+        geom_quasirandom(aes(x = site, y = value, color = site), 
+                         na.rm = TRUE, # ignore missing data
+                         show.legend = FALSE) +  # don't need a legend for colors by site
+        labs(title = title, 
+             x = xlab, 
+             y = ylab) +
+        theme_bw()
+    
+    print(p)
+}
+```
+
+## Temperature
+
+```{r}
+beeswarm_wq(temp_long, title = "2012 Water Temperature")
+```
+
+
+## Salinity
+
+```{r}
+beeswarm_wq(sal_long, title = "2012 Salinity")
+```
+
+
+## DO mg/L
+
+```{r}
+beeswarm_wq(domgl_long, title = "2012 DO mg/L")
+```
+
+## DO % saturation
+
+```{r}
+beeswarm_wq(dopct_long, title = "2012 DO % saturation")
+```
+
+## pH
+
+```{r}
+beeswarm_wq(ph_long, title = "2012 pH")
+```
+
+
+## depth
+
+```{r}
+beeswarm_wq(depth_long, title = "2012 depth")
+```
