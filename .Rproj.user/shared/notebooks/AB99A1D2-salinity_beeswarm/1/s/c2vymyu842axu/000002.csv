@@ -1,3 +1,4 @@
-"0","library(SWMPr)"
-"0","library(tidyverse)"
-"0","library(ggbeeswarm)"
+"0","library(SWMPr)  # for easy import and QC of SWMP data"
+"0","library(tidyverse)  # for lots of data manipulation functions"
+"0","library(ggbeeswarm)  # for cool plotting"
+"0","library(knitr)  # for pretty tables"

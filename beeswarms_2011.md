@@ -1,11 +1,10 @@
 ---
-title: "2011 beeswarm plots"
+title: "2011 beeswarm plots: A Drought Year"
 author: "Kim Cressman"
-date: "2018-05-25"
+date: "2018-05-29"
 output: 
     html_document:
         keep_md: true
-        code_folding: 'hide'
         toc: yes
         toc_float: true
         toc_depth: 4
