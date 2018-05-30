@@ -15,7 +15,7 @@ output:
 
 <br>
 
-What I'm doing for this Plot of the Month is making a _beeswarm plot_. It's really cool - like a cross between a box plot and a histogram, but way more fun, because you get interesting shapes. There's a point on the graph for every measurement; and where the blob is wider, there are more readings of that particular value. Seems like a perfect way to visualize salinity data.  
+For this Plot of the Month, I'm making a _beeswarm plot_. It's really cool - like a cross between a box plot and a histogram, but way more fun, because you get interesting shapes. There's a point on the graph for every measurement; and where the blob is wider, there are more readings of that particular value. Seems like a perfect way to visualize salinity data.  
 
 __Some credit for this idea goes to others:__  These plots were inspired by #TidyTuesday on Twitter - those of you looking for more frequent "assignments" to practice your R and data visualization skills should check it out. More info here: https://github.com/rfordatascience/tidytuesday  
 
